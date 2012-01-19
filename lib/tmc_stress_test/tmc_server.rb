@@ -39,7 +39,7 @@ private
         resp.return!(req, result, &block)
       end
     rescue RestClient::Exception => e
-      if e.response.code == 302
+      if e.response && e.response.code == 302
         e.response
       else
         raise

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# This is a mess but it'll do for now
 
 require 'shellwords'
 
@@ -16,18 +17,40 @@ end
 labels = by_label.keys
 labels.sort!
 
+labels.each do |label|
+  by_label[label].sort_by! {|row| row[1].to_f }
+end
 
 plots = []
 
-File.open('results/gnuplot_dataset.txt', 'wb') do |datafile|
-  labels.each_with_index do |label, dataset_index|
-    datafile << "# " << label << "\n"
-    by_label[label].each do |row|
-      datafile << row[1..3].join(" ") << "\n"
+dataset_path = 'results/gnuplot_dataset.txt'
+File.open(dataset_path, 'wb') do |datafile|
+  dataset_index = 0
+  
+  labels.each do |label|
+    unless by_label[label].empty?
+      datafile << "# " << label << "\n"
+      by_label[label].each do |row|
+        datafile << row[1..2].join(" ") << "\n"
+      end
+      datafile << "\n\n"
+      
+      plots << "'#{dataset_path}' index #{dataset_index} using 1:2 title '#{label}' with lines"
+      dataset_index += 1
     end
-    datafile << "\n\n"
-    
-    plots << "'results/gnuplot_dataset.txt' index #{dataset_index} using 1:2 title '#{label}' with lines"
+  end
+  
+  labels.each do |label|
+    if by_label[label].any? {|row| row[3] == '1' }
+      datafile << "# " << label << " errors\n"
+      by_label[label].each do |row|
+        datafile << row[1..2].join(" ") << "\n" if row[3] == '1'
+      end
+      datafile << "\n\n"
+      
+      plots << "'#{dataset_path}' index #{dataset_index} using 1:2 title '#{label} errors' with points"
+      dataset_index += 1
+    end
   end
 end
 

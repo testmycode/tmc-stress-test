@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+$: << "#{File.dirname(File.expand_path(__FILE__))}/lib"
+require 'tmc_stress_test/test_config'
+require 'tmc_stress_test/tmc_server'
+require 'tmc_stress_test/test_environment'
+require 'tmc_stress_test/test_output'
+require 'tmc_stress_test/runner'
+require 'tmc_stress_test/dsl'
+require 'fileutils'
+
+FileUtils.mkdir_p('results')
+File.open('results/timings.txt', 'wb') do |result_file|
+  config = TestConfig.new
+  server = TmcServer.new(config)
+  output = TestOutput.new(result_file)
+  env = TestEnvironment.new(config, server, output)
+  runner = Runner.new(env)
+
+  if ARGV.include?('--cleanup')
+    env.clean_up
+    puts "Cleanup complete"
+    exit(0)
+  end
+  
+  env.init
+  env.log "Starting tests"
+  
+  dsl = Dsl.new(env)
+  dsl.evaluate_script(File.read('script.rb'))
+  dsl.task_specs.each {|ts| runner.run_task_spec(ts) }
+  runner.wait_until_finished
+end

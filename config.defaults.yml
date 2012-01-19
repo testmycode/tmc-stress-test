@@ -1,0 +1,24 @@
+#
+# You may create a local config.yml to override the settings you want.
+#
+
+# The baseurl of the target server
+baseurl: http://localhost:3000
+
+# Course template git repo
+template_repo_url: git@github.com:testmycode/tmc-course-template.git
+
+# Admin credentials to the target server
+admin_user: admin
+admin_password: admin
+
+# An expendable git repository is needed to store the course.
+# THIS REPO WILL BE DESTROYED DURING THE TEST!!!
+# The test script needs to be able to push to it and
+# the server needs to be able to pull from it.
+
+# URL to clone, clear and push to TMC.
+repo_url_for_push: /tmp/tmc-stress-test-repo
+
+# Course repository URL that TMC can pull from.
+repo_url_for_tmc: /tmp/tmc-stress-test-repo

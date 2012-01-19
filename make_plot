@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require 'shellwords'
+
+all_data = IO.readlines('results/timings.txt').map(&:strip)
+all_data.reject! {|line| line.start_with?('#') }
+
+by_label = {}
+all_data.each do |line|
+  row = line.split(/\s+/)
+  label = row[0]
+  by_label[label] ||= []
+  by_label[label] << row
+end
+
+labels = by_label.keys
+labels.sort!
+
+
+plots = []
+
+File.open('results/gnuplot_dataset.txt', 'wb') do |datafile|
+  labels.each_with_index do |label, dataset_index|
+    datafile << "# " << label << "\n"
+    by_label[label].each do |row|
+      datafile << row[1..3].join(" ") << "\n"
+    end
+    datafile << "\n\n"
+    
+    plots << "'results/gnuplot_dataset.txt' index #{dataset_index} using 1:2 title '#{label}' with lines"
+  end
+end
+
+gnuplot_script = "plot " + plots.join(',')
+gnuplot_cmd = Shellwords.join(['gnuplot', '--persist', '-e', gnuplot_script])
+system(gnuplot_cmd)

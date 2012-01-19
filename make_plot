@@ -57,3 +57,14 @@ end
 gnuplot_script = "plot " + plots.join(',')
 gnuplot_cmd = Shellwords.join(['gnuplot', '--persist', '-e', gnuplot_script])
 system(gnuplot_cmd)
+
+
+puts "Success rates:"
+labels.each do |label|
+  rows = by_label[label]
+  successful = rows.select {|row| row[3] == '0'}.size
+  total = rows.size
+  success_rate = successful / total.to_f
+  printf("  %s: %d / %d  (%.1f%%)\n", label, successful, total, success_rate*100)
+end
+

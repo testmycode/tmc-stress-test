@@ -10,23 +10,25 @@ require 'fileutils'
 
 FileUtils.mkdir_p('results')
 File.open('results/timings.txt', 'wb') do |result_file|
-  config = TestConfig.new
-  server = TmcServer.new(config)
-  output = TestOutput.new(result_file)
-  env = TestEnvironment.new(config, server, output)
-  runner = Runner.new(env)
+  File.open('results/errors.txt', 'wb') do |error_file|
+    config = TestConfig.new
+    server = TmcServer.new(config)
+    output = TestOutput.new(result_file, error_file)
+    env = TestEnvironment.new(config, server, output)
+    runner = Runner.new(env)
 
-  if ARGV.include?('--cleanup')
-    env.clean_up
-    puts "Cleanup complete"
-    exit(0)
+    if ARGV.include?('--cleanup')
+      env.clean_up
+      puts "Cleanup complete"
+      exit(0)
+    end
+    
+    env.init
+    env.log "Starting tests"
+    
+    dsl = Dsl.new(env)
+    dsl.evaluate_script(File.read('script.rb'))
+    dsl.task_specs.each {|ts| runner.run_task_spec(ts) }
+    runner.wait_until_finished
   end
-  
-  env.init
-  env.log "Starting tests"
-  
-  dsl = Dsl.new(env)
-  dsl.evaluate_script(File.read('script.rb'))
-  dsl.task_specs.each {|ts| runner.run_task_spec(ts) }
-  runner.wait_until_finished
 end
